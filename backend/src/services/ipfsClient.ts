@@ -33,7 +33,7 @@ export async function uploadReport(report: SkillReport): Promise<string> {
 export async function fetchReport(cid: string): Promise<SkillReport> {
   // Gateway URL is intentionally explicit to keep IPFS reads browser-friendly and cacheable.
   const url = `https://gateway.pinata.cloud/ipfs/${cid}`;
-  const res = await fetch(url);
+  const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
   if (!res.ok) {
     const err = new Error(`Failed to fetch report from IPFS: ${res.status}`) as Error & { statusCode: number };
     err.statusCode = 502;

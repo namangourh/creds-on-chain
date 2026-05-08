@@ -30,6 +30,9 @@ yarn-error.log*
 *.md
 !/README.md
 
+# ── Claude Code local config ─────────────────────────────────────────────────
+.claude/
+
 # ── OS / editor ───────────────────────────────────────────────────────────────
 .DS_Store
 .vscode/*

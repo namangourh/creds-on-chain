@@ -112,7 +112,7 @@ export default function Header() {
               color: isDark ? undefined : '#0d4aa5',
             }}
           >
-            AI Skill Passport
+            CredChain
           </span>
         </Link>
 

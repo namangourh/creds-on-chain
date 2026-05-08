@@ -1,6 +1,6 @@
-# AI Skill Passport
+# CredChain
 
-Upload your resume or GitHub profile — AI extracts your skills, stores the report on IPFS, and anchors a tamper-proof hash on Solana. Recruiters pay SOL to unlock your full report; you earn directly to your wallet.
+Upload your resume or GitHub profile — AI extracts your creds, stores the report on IPFS, and anchors a tamper-proof hash on Solana. Recruiters pay SOL to unlock your full cred report; you earn directly to your wallet.
 
 ---
 

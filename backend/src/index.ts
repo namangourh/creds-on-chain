@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -17,11 +18,29 @@ const app = express();
 app.use(cors({ origin: process.env.FRONTEND_URL || '*' }));
 app.use(express.json());
 
-app.use("/api/upload", uploadRouter);
-app.use("/api/register", registerRouter);
-app.use("/api/profile", profileRouter);
-app.use("/api/unlock", unlockRouter);
-app.use("/api/report", reportRouter);
+// Tight limit on upload — each request calls OpenAI + Pinata
+const uploadLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many upload requests. Please wait a minute and try again." },
+});
+
+// General limiter for all other API routes
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many requests. Please slow down." },
+});
+
+app.use("/api/upload", uploadLimiter, uploadRouter);
+app.use("/api/register", apiLimiter, registerRouter);
+app.use("/api/profile", apiLimiter, profileRouter);
+app.use("/api/unlock", apiLimiter, unlockRouter);
+app.use("/api/report", apiLimiter, reportRouter);
 
 // Health check
 app.get("/health", (_req, res) => res.json({ status: "ok" }));

@@ -21,7 +21,10 @@ export async function fetchGithubProfile(username: string): Promise<string> {
 
   // Fetch user profile
   // Profile call is a hard gate: no repo call if username itself is invalid/rate-limited.
-  const userRes = await fetch(`https://api.github.com/users/${username}`, { headers });
+  const userRes = await fetch(`https://api.github.com/users/${username}`, {
+    headers,
+    signal: AbortSignal.timeout(10000),
+  });
 
   if (userRes.status === 404) {
     const err = new Error("GitHub user not found.") as Error & { statusCode: number };
@@ -45,7 +48,7 @@ export async function fetchGithubProfile(username: string): Promise<string> {
   // Recency sort improves signal for active skills over stale historical repos.
   const reposRes = await fetch(
     `https://api.github.com/users/${username}/repos?per_page=30&sort=updated`,
-    { headers }
+    { headers, signal: AbortSignal.timeout(10000) }
   );
 
   if (!reposRes.ok) {

@@ -165,7 +165,7 @@ export default function LandingPage() {
                 : '0 0 20px rgba(255,255,255,1), 0 0 40px rgba(255,255,255,0.9), 0 0 60px rgba(255,255,255,0.6)',
             }}
           >
-            Your Skills.{' '}
+            Your Creds.{' '}
             <span className="gradient-text">Verified On-Chain.</span>
           </motion.h1>
 
@@ -184,9 +184,9 @@ export default function LandingPage() {
                 : '0 0 16px rgba(255,255,255,1), 0 0 32px rgba(255,255,255,0.9), 0 0 48px rgba(255,255,255,0.7)',
             }}
           >
-            Upload your resume or connect your GitHub. AI extracts your skills,
-            stores the proof on Solana, and creates a shareable profile that
-            anyone can verify — instantly.
+            Upload your resume or GitHub profile. AI extracts your creds,
+            anchors them permanently on Solana, and creates a shareable profile
+            that anyone can verify — instantly.
           </motion.p>
 
           {/* CTA */}
@@ -218,7 +218,7 @@ export default function LandingPage() {
                 {connected ? 'rocket_launch' : 'account_balance_wallet'}
               </span>
               <span style={{ position: 'relative' }}>
-                {connected ? 'Create My Passport' : 'Connect Wallet & Get Started'}
+                {connected ? 'Create My Cred' : 'Connect Wallet & Get Started'}
               </span>
             </motion.button>
           </motion.div>
@@ -257,17 +257,17 @@ export default function LandingPage() {
           {
             icon: 'description',
             title: 'Upload Resume or GitHub',
-            desc: 'PDF upload or GitHub username — AI analyzes both sources automatically.',
+            desc: 'PDF upload or GitHub username — AI extracts your creds from both sources automatically.',
           },
           {
             icon: 'verified',
-            title: 'On-Chain Proof',
-            desc: 'SHA-256 hash of your skill report anchored on Solana. Tamper-proof forever.',
+            title: 'On-Chain Cred',
+            desc: 'SHA-256 hash of your cred report anchored on Solana. Tamper-proof forever.',
           },
           {
             icon: 'lock_open',
             title: 'Pay-to-Unlock',
-            desc: 'Recruiters pay SOL to unlock your full report. You earn directly to your wallet.',
+            desc: 'Recruiters pay SOL to unlock your full cred report. You earn directly to your wallet.',
           },
         ].map((card, index) => (
           <motion.div
