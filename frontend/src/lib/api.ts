@@ -46,6 +46,7 @@ export async function getProfile(walletAddress: string): Promise<{
   hash: string;
   price: number;
   cid: string;
+  nonce: number;
   skillReport: SkillReport;
 }> {
   // Profile response mixes chain state (hash/price) with teaser data from IPFS.

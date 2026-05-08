@@ -4,7 +4,7 @@ import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { uploadResume, uploadGithub, registerProof } from '../lib/api';
-import { buildAddProofTx, solToLamports, lamportsToSol } from '../lib/solana';
+import { buildAddProofTx, solToLamports } from '../lib/solana';
 import ProgressSteps from '../components/ProgressSteps';
 import ExplorerLink from '../components/ExplorerLink';
 import ShareButton from '../components/ShareButton';
