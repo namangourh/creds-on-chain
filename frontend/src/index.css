@@ -424,7 +424,9 @@ html:not(.dark) .wallet-adapter-button {
 
 /* Modal close button */
 .wallet-adapter-modal-button-close {
+  position: absolute !important;
   background: rgba(255, 255, 255, 0.06) !important;
+  border: none !important;
   border-radius: 50% !important;
   top: 1rem !important;
   right: 1rem !important;
@@ -433,6 +435,9 @@ html:not(.dark) .wallet-adapter-button {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  overflow: visible !important;
   transition: background 0.2s !important;
 }
 
@@ -441,9 +446,11 @@ html:not(.dark) .wallet-adapter-button {
 }
 
 .wallet-adapter-modal-button-close svg {
-  fill: rgba(255, 255, 255, 0.6) !important;
+  display: block !important;
+  fill: rgba(255, 255, 255, 0.7) !important;
   width: 14px !important;
   height: 14px !important;
+  flex-shrink: 0 !important;
 }
 
 /* Wallet list inside modal — override the global button styles */
