@@ -118,6 +118,21 @@ export default function Header() {
 
         {/* Right side */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <Link
+            to="/browse"
+            style={{
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              color: isDark ? 'rgba(255,255,255,0.7)' : '#475569',
+              textDecoration: 'none',
+              letterSpacing: isDark ? '0.01em' : '0',
+              transition: 'color 0.2s',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.color = isDark ? '#14f070' : '#0d4aa5')}
+            onMouseLeave={e => (e.currentTarget.style.color = isDark ? 'rgba(255,255,255,0.7)' : '#475569')}
+          >
+            Browse
+          </Link>
           <ThemeToggle />
           {publicKey ? (
             <WalletMultiButton />

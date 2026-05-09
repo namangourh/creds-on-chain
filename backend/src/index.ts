@@ -10,6 +10,7 @@ validateEnv();
 import uploadRouter from "./routes/upload";
 import registerRouter from "./routes/register";
 import profileRouter from "./routes/profile";
+import profilesRouter from "./routes/profiles";
 import unlockRouter from "./routes/unlock";
 import reportRouter from "./routes/report";
 
@@ -39,6 +40,7 @@ const apiLimiter = rateLimit({
 app.use("/api/upload", uploadLimiter, uploadRouter);
 app.use("/api/register", apiLimiter, registerRouter);
 app.use("/api/profile", apiLimiter, profileRouter);
+app.use("/api/profiles", apiLimiter, profilesRouter);
 app.use("/api/unlock", apiLimiter, unlockRouter);
 app.use("/api/report", apiLimiter, reportRouter);
 

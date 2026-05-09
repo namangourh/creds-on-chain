@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { SkillReport } from '../types';
+import type { SkillReport, BrowseProfile } from '../types';
 
 const BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
 
@@ -68,5 +68,10 @@ export async function fetchReport(cid: string, token: string): Promise<SkillRepo
   const { data } = await api.get(`/api/report/${cid}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
+  return data;
+}
+
+export async function getBrowseProfiles(): Promise<BrowseProfile[]> {
+  const { data } = await api.get('/api/profiles');
   return data;
 }

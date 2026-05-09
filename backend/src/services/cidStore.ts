@@ -27,3 +27,15 @@ export async function getAllProofs(wallet: string): Promise<ProofEntry[]> {
   );
   return result.rows;
 }
+
+export async function getAllProofsByWallet(): Promise<{ wallet: string; cid: string; nonce: number }[]> {
+  // Returns all proofs grouped by wallet (newest first per wallet) so callers can
+  // walk through nonces until they find one whose on-chain account still exists.
+  const result = await getPool().query<{ wallet: string; cid: string; nonce: number }>(
+    `SELECT wallet, cid, nonce
+     FROM proofs
+     ORDER BY wallet, nonce DESC
+     LIMIT 500`
+  );
+  return result.rows;
+}

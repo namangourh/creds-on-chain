@@ -8,6 +8,7 @@ import Header from './components/Header';
 import LandingPage from './pages/LandingPage';
 import UploadPage from './pages/UploadPage';
 import ProfilePage from './pages/ProfilePage';
+import BrowsePage from './pages/BrowsePage';
 import SolanaBackground from './components/SolanaBackground';
 
 // Deterministic pseudo-random — avoids shifting values on re-renders
@@ -111,6 +112,7 @@ function AnimatedRoutes() {
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<PageTransition><LandingPage /></PageTransition>} />
         <Route path="/upload" element={<PageTransition><UploadPage /></PageTransition>} />
+        <Route path="/browse" element={<PageTransition><BrowsePage /></PageTransition>} />
         <Route path="/profile/:walletAddress" element={<PageTransition><ProfilePage /></PageTransition>} />
       </Routes>
     </AnimatePresence>

@@ -3,3 +3,10 @@ export interface SkillReport {
   summary: string;
   score: number;
 }
+
+export interface BrowseProfile {
+  wallet: string;
+  cid: string;
+  price: number;
+  skillReport: SkillReport;
+}

@@ -190,7 +190,7 @@ export default function LandingPage() {
           </motion.p>
 
           {/* CTA */}
-          <motion.div variants={heroItemVariants}>
+          <motion.div variants={heroItemVariants} style={{ display: 'flex', gap: '0.875rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             <motion.button
               className="neon-btn"
               onClick={handleGetStarted}
@@ -220,6 +220,28 @@ export default function LandingPage() {
               <span style={{ position: 'relative' }}>
                 {connected ? 'Create My Cred' : 'Connect Wallet & Get Started'}
               </span>
+            </motion.button>
+
+            <motion.button
+              className="neon-btn"
+              onClick={() => navigate('/browse')}
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+              style={{ fontSize: '1rem', padding: '0.875rem 2rem', position: 'relative', overflow: 'hidden' }}
+            >
+              <motion.span
+                aria-hidden
+                animate={{ x: ['-120%', '220%'] }}
+                transition={{ duration: 2.6, repeat: Infinity, repeatDelay: 1.8, ease: 'easeInOut' }}
+                style={{
+                  position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                  background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent)',
+                  pointerEvents: 'none',
+                }}
+              />
+              <span className="material-symbols-outlined" style={{ fontSize: '18px', position: 'relative' }}>person_search</span>
+              <span style={{ position: 'relative' }}>Browse Creds</span>
             </motion.button>
           </motion.div>
         </motion.div>
