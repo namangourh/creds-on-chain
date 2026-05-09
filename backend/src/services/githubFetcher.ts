@@ -17,6 +17,7 @@ export async function fetchGithubProfile(username: string): Promise<string> {
   const headers: Record<string, string> = {
     Accept: "application/vnd.github.v3+json",
     "User-Agent": "ai-skill-passport",
+    ...(process.env.GITHUB_TOKEN ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` } : {}),
   };
 
   // Fetch user profile
