@@ -251,10 +251,7 @@ export default function UploadPage() {
 
       // Step 5: Confirm on-chain
       // Wait for confirmation before register call so backend only records finalized intents.
-      await Promise.race([
-        connection.confirmTransaction(sig, 'confirmed'),
-        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Transaction confirmation timed out')), 60000)),
-      ]);
+      await connection.confirmTransaction(sig, 'confirmed');
 
       // Register with backend
       // Backend persists cid+nonce so profile endpoint can find the matching proof account.

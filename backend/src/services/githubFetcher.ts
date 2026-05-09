@@ -23,7 +23,7 @@ export async function fetchGithubProfile(username: string): Promise<string> {
   // Profile call is a hard gate: no repo call if username itself is invalid/rate-limited.
   const userRes = await fetch(`https://api.github.com/users/${username}`, {
     headers,
-    signal: AbortSignal.timeout(60000),
+    signal: AbortSignal.timeout(10000),
   });
 
   if (userRes.status === 404) {
