@@ -236,6 +236,8 @@ export default function UploadPage() {
         const msg: string = err?.message ?? '';
         if (msg.includes('User rejected') || msg.includes('cancelled')) {
           toast.error('Transaction cancelled');
+        } else if (msg.toLowerCase().includes('not enough') || msg.toLowerCase().includes('insufficient') || msg.toLowerCase().includes('0x1')) {
+          toast.error('Not enough SOL. Make sure Phantom is set to Devnet and your wallet has SOL. Visit faucet.solana.com to airdrop.', { duration: 10000 });
         } else {
           const logs: string[] = err?.logs ?? err?.transactionError?.logs ?? [];
           const logSummary = logs.length ? '\n' + logs.slice(-3).join('\n') : '';
