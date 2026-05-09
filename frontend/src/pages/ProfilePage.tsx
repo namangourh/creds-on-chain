@@ -257,7 +257,10 @@ export default function ProfilePage() {
         return;
       }
 
-      await connection.confirmTransaction(sig, 'confirmed');
+      await Promise.race([
+        connection.confirmTransaction(sig, 'confirmed'),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Transaction confirmation timed out')), 60000)),
+      ]);
       setUnlockTxSig(sig);
 
       // Backend verifies payment transfer and returns a short-lived CID-scoped token.
