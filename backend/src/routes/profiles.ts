@@ -9,7 +9,7 @@ const router = Router();
 interface BrowseProfile {
   wallet: string;
   cid: string;
-  price: number;
+  price: number | null;
   skillReport: SkillReport;
 }
 
@@ -38,7 +38,15 @@ router.get("/", async (_req: Request, res: Response) => {
           const skillReport = await fetchReport(cid);
           return { wallet, cid, price: Number(onChain.price), skillReport };
         }
-        return null;
+        // Fallback: on-chain lookup failed (e.g. wallet stored lowercase in DB).
+        // Still surface the profile for discovery; price shown as unknown on the card.
+        const { cid } = entries[0];
+        try {
+          const skillReport = await fetchReport(cid);
+          return { wallet, cid, price: null, skillReport };
+        } catch {
+          return null;
+        }
       })
     );
 

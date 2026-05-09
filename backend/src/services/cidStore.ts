@@ -8,22 +8,22 @@ interface ProofEntry {
 export async function addProof(wallet: string, cid: string, nonce: number): Promise<void> {
   await getPool().query(
     "INSERT INTO proofs (wallet, cid, nonce) VALUES ($1, $2, $3)",
-    [wallet.toLowerCase(), cid, nonce]
+    [wallet, cid, nonce]
   );
 }
 
 export async function getLatestProof(wallet: string): Promise<ProofEntry | undefined> {
   const result = await getPool().query<ProofEntry>(
-    "SELECT cid, nonce FROM proofs WHERE wallet = $1 ORDER BY nonce DESC LIMIT 1",
-    [wallet.toLowerCase()]
+    "SELECT cid, nonce FROM proofs WHERE LOWER(wallet) = LOWER($1) ORDER BY nonce DESC LIMIT 1",
+    [wallet]
   );
   return result.rows[0];
 }
 
 export async function getAllProofs(wallet: string): Promise<ProofEntry[]> {
   const result = await getPool().query<ProofEntry>(
-    "SELECT cid, nonce FROM proofs WHERE wallet = $1 ORDER BY nonce DESC",
-    [wallet.toLowerCase()]
+    "SELECT cid, nonce FROM proofs WHERE LOWER(wallet) = LOWER($1) ORDER BY nonce DESC",
+    [wallet]
   );
   return result.rows;
 }

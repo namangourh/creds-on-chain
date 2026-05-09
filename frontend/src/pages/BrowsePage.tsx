@@ -113,7 +113,7 @@ function ProfileCard({ profile, isDark }: { profile: BrowseProfile; isDark: bool
             Unlock Price
           </p>
           <p style={{ fontSize: '1rem', fontWeight: 700, color: primaryColor, margin: 0 }}>
-            {lamportsToSol(profile.price)} SOL
+            {profile.price !== null ? `${lamportsToSol(profile.price)} SOL` : '—'}
           </p>
         </div>
         <motion.button

@@ -7,6 +7,6 @@ export interface SkillReport {
 export interface BrowseProfile {
   wallet: string;
   cid: string;
-  price: number;
+  price: number | null;
   skillReport: SkillReport;
 }
