@@ -729,25 +729,6 @@ export default function UploadPage() {
             ))}
           </motion.div>
           <p style={{ fontSize: '0.9375rem', lineHeight: 1.6, color: 'var(--text-body)' }}>{data.skillReport.summary}</p>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.5, type: 'spring', stiffness: 300, damping: 20 }}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.375rem',
-              marginTop: '0.875rem',
-              padding: '0.25rem 0.75rem',
-              borderRadius: '9999px',
-              background: isDark ? 'rgba(20,241,112,0.1)' : 'rgba(13,74,165,0.08)',
-              fontSize: '0.875rem',
-              fontWeight: 700,
-              color: primaryColor,
-            }}
-          >
-            Score: {data.skillReport.score}/100
-          </motion.div>
         </motion.div>
 
         {/* Explorer link */}
