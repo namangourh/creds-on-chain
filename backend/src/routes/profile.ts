@@ -27,7 +27,7 @@ router.get("/:walletAddress", async (req: Request, res: Response) => {
     const skillReport = await fetchReport(latestProof.cid);
     res.json({
       hash: proof.hash,
-      price: proof.price.toString(),
+      price: Number(proof.price),
       cid: latestProof.cid,
       nonce: latestProof.nonce,
       skillReport,
