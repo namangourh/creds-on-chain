@@ -174,6 +174,35 @@ const skillFromLeftItem = {
   visible: { opacity: 1, x: 0, transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] } },
 };
 
+function unlockStorageKey(cid: string) {
+  return `credchain_unlock_${cid}`;
+}
+
+function saveUnlockToken(cid: string, token: string) {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    const exp: number = payload.exp ?? Math.floor(Date.now() / 1000) + 3600;
+    localStorage.setItem(unlockStorageKey(cid), JSON.stringify({ token, exp }));
+  } catch {
+    // ignore storage errors
+  }
+}
+
+function loadUnlockToken(cid: string): string | null {
+  try {
+    const raw = localStorage.getItem(unlockStorageKey(cid));
+    if (!raw) return null;
+    const { token, exp } = JSON.parse(raw) as { token: string; exp: number };
+    if (Math.floor(Date.now() / 1000) >= exp) {
+      localStorage.removeItem(unlockStorageKey(cid));
+      return null;
+    }
+    return token;
+  } catch {
+    return null;
+  }
+}
+
 export default function ProfilePage() {
   const { walletAddress } = useParams<{ walletAddress: string }>();
   const { publicKey, sendTransaction } = useWallet();
@@ -196,7 +225,21 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!walletAddress) return;
     getProfile(walletAddress)
-      .then(p => setProfile(p))
+      .then(async p => {
+        setProfile(p);
+        // Auto-unlock if a valid token is cached for this report
+        const cached = loadUnlockToken(p.cid);
+        if (cached) {
+          try {
+            const report = await fetchReport(p.cid, cached);
+            setFullReport(report);
+            setUnlocked(true);
+          } catch {
+            // Token rejected by backend (expired/invalid) — clear it silently
+            localStorage.removeItem(unlockStorageKey(p.cid));
+          }
+        }
+      })
       .catch(err => {
         if (err?.response?.status === 404) setNotFound(true);
         else toast.error('Failed to load profile');
@@ -262,6 +305,7 @@ export default function ProfilePage() {
 
       // Backend verifies payment transfer and returns a short-lived CID-scoped token.
       const { token } = await unlockReport(sig, publicKey.toBase58(), walletAddress);
+      saveUnlockToken(profile.cid, token);
       const report = await fetchReport(profile.cid, token);
 
       const computed = await sha256Hex(JSON.stringify(report));
