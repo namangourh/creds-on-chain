@@ -291,7 +291,7 @@ export default function UploadPage() {
                 marginBottom: '0.5rem',
               }}
             >
-              Create Your <span className="gradient-text">Skill Passport</span>
+              Create Your <span className="gradient-text">Creds</span>
             </h1>
             <p style={{ color: 'var(--text-muted)', marginBottom: '2.5rem', fontSize: '1rem' }}>
               Upload a PDF resume or enter your GitHub username to get started.
@@ -630,7 +630,7 @@ export default function UploadPage() {
                 marginBottom: '1.5rem',
               }}
             >
-              Building your passport…
+              Building your creds…
             </h2>
             <ProgressSteps currentStep={step} />
           </div>
@@ -694,7 +694,7 @@ export default function UploadPage() {
             marginBottom: '0.5rem',
           }}
         >
-          Passport Created!
+          Creds Created!
         </motion.h1>
         <motion.p
           initial={{ opacity: 0 }}
