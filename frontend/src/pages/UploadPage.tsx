@@ -133,12 +133,13 @@ export default function UploadPage() {
     e.preventDefault();
     setDragging(false);
     const dropped = e.dataTransfer.files[0];
-    if (dropped?.type === 'application/pdf') {
+    const accepted = dropped?.type === 'application/pdf' || dropped?.type?.startsWith('image/');
+    if (accepted) {
       setFile(dropped);
       setJustDropped(true);
       setTimeout(() => setJustDropped(false), 500);
     } else {
-      toast.error('Please upload a PDF file');
+      toast.error('Please upload a PDF or image file (JPEG, PNG, etc.)');
     }
   }, []);
 
@@ -266,7 +267,7 @@ export default function UploadPage() {
               Create Your <span className="gradient-text">Creds</span>
             </h1>
             <p style={{ color: 'var(--text-muted)', marginBottom: '2.5rem', fontSize: '1rem' }}>
-              Upload a PDF resume or enter your GitHub username to get started.
+              Upload a PDF, scanned image, or GitHub username — analyzed locally by QVAC AI, anchored on Solana.
             </p>
           </motion.div>
 
@@ -386,18 +387,20 @@ export default function UploadPage() {
                         {file ? 'check_circle' : 'cloud_upload'}
                       </motion.span>
                       {file ? (
-                        <p style={{ fontWeight: 600, color: primaryColor }}>{file.name}</p>
+                        <p style={{ fontWeight: 600, color: primaryColor }}>
+                          {file.type.startsWith('image/') ? `📷 ${file.name}` : file.name}
+                        </p>
                       ) : (
                         <>
-                          <p style={{ fontWeight: 500, marginBottom: '0.25rem' }}>Drop PDF here or click to browse</p>
-                          <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>Max 10 MB</p>
+                          <p style={{ fontWeight: 500, marginBottom: '0.25rem' }}>Drop PDF or image here or click to browse</p>
+                          <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>PDF or image (JPEG, PNG) · Max 10 MB</p>
                         </>
                       )}
                     </motion.div>
                     <input
                       ref={fileInputRef}
                       type="file"
-                      accept="application/pdf"
+                      accept="application/pdf,image/jpeg,image/jpg,image/png,image/tiff,image/bmp,image/webp"
                       onChange={handleFileSelect}
                       style={{ display: 'none' }}
                     />
@@ -560,9 +563,12 @@ export default function UploadPage() {
             {/* Right panel — info cards */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {[
-                { icon: 'psychology', title: 'AI Analysis', desc: 'GPT-4o-mini extracts your skills, writes a summary, and scores your profile 0–100.' },
+                { icon: 'psychology', title: 'Local LLM Analysis', desc: 'QVAC runs Mistral-7B on-device to extract skills, write a summary, and score your profile 0–100. No data leaves your machine.' },
+                { icon: 'document_scanner', title: 'OCR for Scanned Resumes', desc: 'Upload a scanned PDF or image — QVAC OCR extracts text on-device before analysis. Supports JPEG, PNG, TIFF, and more.' },
+                { icon: 'travel_explore', title: 'Semantic Search', desc: 'QVAC embeds every profile locally. The Browse page ranks results by cosine similarity — not keyword matching.' },
+                { icon: 'translate', title: 'Multilingual Reports', desc: 'Unlocked reports can be translated into 15 languages on the profile page — powered by QVAC local NMT, on-device.' },
                 { icon: 'cloud_upload', title: 'IPFS Storage', desc: 'Your skill report is pinned to IPFS via Pinata. Permanent and censorship-resistant.' },
-                { icon: 'link', title: 'On-Chain Proof', desc: 'The SHA-256 hash is stored on Solana. Anyone can verify your report hasn\'t been tampered with.' },
+                { icon: 'link', title: 'On-Chain Proof', desc: 'The SHA-256 hash is anchored on Solana. Anyone can verify your report hasn\'t been tampered with.' },
               ].map((item, i) => (
                 <motion.div
                   key={item.title}

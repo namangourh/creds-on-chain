@@ -1,6 +1,8 @@
 import { Router, Request, Response } from "express";
 import { verifyAddProofTx } from "../services/solanaVerifier";
 import { addProof } from "../services/cidStore";
+import { fetchReport } from "../services/ipfsClient";
+import { indexProfile } from "../services/embeddings";
 
 const router = Router();
 
@@ -22,6 +24,13 @@ router.post("/", async (req: Request, res: Response) => {
 
     // Store nonce with CID so profile lookup can derive the same nonce-scoped PDA later.
     await addProof(walletAddress, cid, Number(nonce));
+
+    // Index the new profile in the QVAC embedding store so it's immediately searchable.
+    // Fire-and-forget: IPFS fetch is slow and we don't want to delay the registration response.
+    fetchReport(cid)
+      .then(report => indexProfile(walletAddress, cid, null, report))
+      .catch(e => console.warn("[register] embedding index failed:", e?.message));
+
     res.json({ success: true });
   } catch (err: any) {
     console.error("[register] error:", err.message);

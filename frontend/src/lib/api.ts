@@ -81,3 +81,18 @@ export async function searchProfiles(query: string): Promise<Array<BrowseProfile
   return data;
 }
 
+export async function getSupportedLanguages(): Promise<{
+  languages: Record<string, string>;
+  qvacAvailable: boolean;
+}> {
+  const { data } = await api.get('/api/translate/languages');
+  return data;
+}
+
+export async function translateSummary(
+  text: string,
+  targetLang: string
+): Promise<{ translated: string; usedQVAC: boolean }> {
+  const { data } = await api.post('/api/translate', { text, targetLang });
+  return data;
+}

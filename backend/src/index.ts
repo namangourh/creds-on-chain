@@ -14,6 +14,7 @@ import profilesRouter from "./routes/profiles";
 import unlockRouter from "./routes/unlock";
 import reportRouter from "./routes/report";
 import searchRouter from "./routes/search";
+import translateRouter from "./routes/translate";
 
 const app = express();
 
@@ -45,6 +46,7 @@ app.use("/api/profiles", apiLimiter, profilesRouter);
 app.use("/api/unlock", apiLimiter, unlockRouter);
 app.use("/api/report", apiLimiter, reportRouter);
 app.use("/api/search", apiLimiter, searchRouter);
+app.use("/api/translate", apiLimiter, translateRouter);
 
 // Health check
 app.get("/health", (_req, res) => res.json({ status: "ok" }));

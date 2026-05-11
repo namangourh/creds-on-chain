@@ -4,7 +4,7 @@ import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getProfile, unlockReport, fetchReport } from '../lib/api';
+import { getProfile, unlockReport, fetchReport, getSupportedLanguages, translateSummary } from '../lib/api';
 import { buildPayToUnlockTx, lamportsToSol } from '../lib/solana';
 import { sha256Hex } from '../lib/hash';
 import SkillTag from '../components/SkillTag';
@@ -219,8 +219,37 @@ export default function ProfilePage() {
   const [unlocking, setUnlocking] = useState(false);
   const [hashWarning, setHashWarning] = useState(false);
 
+  // Translation state
+  const [languages, setLanguages] = useState<Record<string, string>>({ en: 'English' });
+  const [qvacTranslateAvailable, setQvacTranslateAvailable] = useState(false);
+  const [selectedLang, setSelectedLang] = useState('en');
+  const [translatedSummary, setTranslatedSummary] = useState<string | null>(null);
+  const [translating, setTranslating] = useState(false);
+
   const primaryColor = isDark ? '#14f070' : '#0d4aa5';
   const isOwner = publicKey?.toBase58().toLowerCase() === walletAddress?.toLowerCase();
+
+  useEffect(() => {
+    getSupportedLanguages()
+      .then(({ languages: langs, qvacAvailable }) => {
+        setLanguages(langs);
+        setQvacTranslateAvailable(qvacAvailable);
+      })
+      .catch(() => {/* silently ignore — feature degrades gracefully */});
+  }, []);
+
+  const handleLangChange = async (lang: string) => {
+    setSelectedLang(lang);
+    if (lang === 'en') { setTranslatedSummary(null); return; }
+    const summary = (unlocked ? fullReport?.summary : profile?.skillReport.summary) ?? '';
+    if (!summary) return;
+    setTranslating(true);
+    try {
+      const { translated } = await translateSummary(summary, lang);
+      setTranslatedSummary(translated);
+    } catch { setTranslatedSummary(null); }
+    finally { setTranslating(false); }
+  };
 
   useEffect(() => {
     if (!walletAddress) return;
@@ -575,12 +604,78 @@ export default function ProfilePage() {
                   transition={{ duration: 0.4, delay: 0.15 }}
                 >
                   <ScoreRing score={fullReport!.score} locked={false} />
-                  <div>
+                  <div style={{ flex: 1 }}>
+                    {/* ── Language selector row ── */}
+                    <div style={{
+                      display: 'flex', alignItems: 'center', gap: '0.625rem',
+                      marginBottom: '0.875rem', flexWrap: 'wrap',
+                      padding: '0.625rem 0.875rem',
+                      borderRadius: '0.875rem',
+                      background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
+                      border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.07)',
+                    }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: '18px', color: primaryColor, fontVariationSettings: '"FILL" 1', flexShrink: 0 }}>
+                        translate
+                      </span>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', flexShrink: 0 }}>
+                        Language
+                      </span>
+                      <select
+                        value={selectedLang}
+                        onChange={e => handleLangChange(e.target.value)}
+                        disabled={translating}
+                        style={{
+                          fontSize: '0.875rem',
+                          fontWeight: 500,
+                          padding: '0.35rem 0.75rem',
+                          borderRadius: '0.625rem',
+                          border: `1px solid ${primaryColor}44`,
+                          background: isDark ? '#0D0E12' : '#fff',
+                          color: isDark ? '#e2e8f0' : '#0f172a',
+                          cursor: 'pointer',
+                          outline: 'none',
+                          flex: 1,
+                          minWidth: '140px',
+                          appearance: 'auto',
+                        }}
+                      >
+                        {Object.entries(languages).map(([code, name]) => (
+                          <option key={code} value={code} style={{ background: isDark ? '#0D0E12' : '#fff', color: isDark ? '#e2e8f0' : '#0f172a' }}>
+                            {name}
+                          </option>
+                        ))}
+                      </select>
+                      {translating ? (
+                        <motion.span
+                          className="material-symbols-outlined"
+                          style={{ fontSize: '16px', color: primaryColor, flexShrink: 0 }}
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                        >
+                          progress_activity
+                        </motion.span>
+                      ) : selectedLang !== 'en' ? (
+                        <span style={{
+                          fontSize: '0.6875rem', fontWeight: 700,
+                          color: primaryColor,
+                          border: `1px solid ${primaryColor}44`,
+                          borderRadius: '9999px',
+                          padding: '0.15rem 0.55rem',
+                          background: isDark ? 'rgba(20,241,112,0.07)' : 'rgba(13,74,165,0.07)',
+                          letterSpacing: '0.04em',
+                          flexShrink: 0,
+                        }}>
+                          {qvacTranslateAvailable ? 'QVAC local' : 'AI translated'}
+                        </span>
+                      ) : null}
+                    </div>
+
+                    {/* Summary */}
                     <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.5rem' }}>
                       Summary
                     </p>
                     <p style={{ fontSize: '0.9375rem', lineHeight: 1.6, color: 'var(--text-body)' }}>
-                      {fullReport!.summary}
+                      {translatedSummary ?? fullReport!.summary}
                     </p>
                   </div>
                 </motion.div>
