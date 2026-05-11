@@ -15,34 +15,6 @@ import type { SkillReport } from '../types';
 type View = 'form' | 'processing' | 'success';
 type InputTab = 'resume' | 'github';
 
-function SlowStartWarning() {
-  const [show, setShow] = useState(false);
-  useEffect(() => {
-    const t = setTimeout(() => setShow(true), 15000);
-    return () => clearTimeout(t);
-  }, []);
-  return (
-    <AnimatePresence>
-      {show && (
-        <motion.p
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.5 }}
-          style={{
-            fontSize: '0.8125rem',
-            color: 'var(--text-muted)',
-            textAlign: 'center',
-            marginTop: '0.75rem',
-            maxWidth: '260px',
-          }}
-        >
-          Backend is waking up — this first request can take up to 60 s. Please wait…
-        </motion.p>
-      )}
-    </AnimatePresence>
-  );
-}
 
 interface SuccessData {
   skillReport: SkillReport;
@@ -473,28 +445,88 @@ export default function UploadPage() {
                 <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem', color: 'var(--text-muted)' }}>
                   Unlock Price (SOL)
                 </label>
-                <div style={{ position: 'relative' }}>
-                  <span
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  {/* Decrement */}
+                  <motion.button
+                    type="button"
+                    onClick={() => setPriceSOL(v => Math.max(0, parseFloat(v || '0') - 0.01).toFixed(3))}
+                    whileHover={{ scale: 1.08 }}
+                    whileTap={{ scale: 0.93 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 18 }}
                     style={{
-                      position: 'absolute',
-                      right: '1rem',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      fontSize: '0.8125rem',
-                      opacity: 0.68,
+                      flexShrink: 0,
+                      width: '2.25rem',
+                      height: '2.25rem',
+                      borderRadius: '0.625rem',
+                      border: isDark ? '1px solid rgba(255,255,255,0.12)' : '1px solid rgba(0,0,0,0.1)',
+                      background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+                      color: 'var(--text-body)',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '1.1rem',
+                      fontWeight: 500,
+                      lineHeight: 1,
                     }}
                   >
-                    SOL
-                  </span>
-                  <input
-                    className="glass-input"
-                    style={{ paddingRight: '3.5rem' }}
-                    type="number"
-                    min="0"
-                    step="0.001"
-                    value={priceSOL}
-                    onChange={e => setPriceSOL(e.target.value)}
-                  />
+                    −
+                  </motion.button>
+
+                  {/* Value input */}
+                  <div style={{ position: 'relative', flex: 1 }}>
+                    <input
+                      className="glass-input"
+                      style={{ paddingRight: '3.25rem', textAlign: 'center' }}
+                      type="number"
+                      min="0"
+                      step="0.001"
+                      value={priceSOL}
+                      onChange={e => setPriceSOL(e.target.value)}
+                    />
+                    <span
+                      style={{
+                        position: 'absolute',
+                        right: '0.875rem',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        letterSpacing: '0.04em',
+                        opacity: 0.55,
+                        pointerEvents: 'none',
+                      }}
+                    >
+                      SOL
+                    </span>
+                  </div>
+
+                  {/* Increment */}
+                  <motion.button
+                    type="button"
+                    onClick={() => setPriceSOL(v => (parseFloat(v || '0') + 0.01).toFixed(3))}
+                    whileHover={{ scale: 1.08 }}
+                    whileTap={{ scale: 0.93 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 18 }}
+                    style={{
+                      flexShrink: 0,
+                      width: '2.25rem',
+                      height: '2.25rem',
+                      borderRadius: '0.625rem',
+                      border: `1px solid ${isDark ? 'rgba(20,241,112,0.3)' : 'rgba(13,74,165,0.25)'}`,
+                      background: isDark ? 'rgba(20,241,112,0.08)' : 'rgba(13,74,165,0.06)',
+                      color: primaryColor,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '1.1rem',
+                      fontWeight: 500,
+                      lineHeight: 1,
+                    }}
+                  >
+                    +
+                  </motion.button>
                 </div>
                 <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.375rem' }}>
                   Viewers will pay this amount to unlock your full report
@@ -616,7 +648,6 @@ export default function UploadPage() {
             </div>
             <div style={{ marginTop: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <TypewriterText />
-              <SlowStartWarning />
             </div>
           </div>
 

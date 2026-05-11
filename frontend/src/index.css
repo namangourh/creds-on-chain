@@ -326,6 +326,17 @@ html:not(.dark) .skill-pill {
   color: #0d4aa5;
 }
 
+/* Hide native number spinners globally */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  -moz-appearance: textfield;
+}
+
 /* Input styles */
 .glass-input {
   width: 100%;
