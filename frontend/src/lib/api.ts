@@ -75,3 +75,24 @@ export async function getBrowseProfiles(): Promise<BrowseProfile[]> {
   const { data } = await api.get('/api/profiles');
   return data;
 }
+
+export async function searchProfiles(query: string): Promise<Array<BrowseProfile & { score: number }>> {
+  const { data } = await api.get('/api/search', { params: { q: query, limit: 20 } });
+  return data;
+}
+
+export async function getSupportedLanguages(): Promise<{
+  languages: Record<string, string>;
+  qvacAvailable: boolean;
+}> {
+  const { data } = await api.get('/api/translate/languages');
+  return data;
+}
+
+export async function translateSummary(
+  text: string,
+  targetLang: string
+): Promise<{ translated: string; usedQVAC: boolean }> {
+  const { data } = await api.post('/api/translate', { text, targetLang });
+  return data;
+}

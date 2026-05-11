@@ -5,17 +5,29 @@ import { fetchGithubProfile } from "../services/githubFetcher";
 import { analyzeText } from "../services/aiAnalyzer";
 import { uploadReport } from "../services/ipfsClient";
 import { sha256Hex } from "../services/hashUtils";
+import { extractTextFromImage, isImageOnlyContent } from "../services/ocrExtractor";
 
 const router = Router();
+
+// Accept PDF files and common image formats for scanned resumes (QVAC OCR path)
+const ACCEPTED_MIME_TYPES = new Set([
+  "application/pdf",
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/tiff",
+  "image/bmp",
+  "image/webp",
+]);
 
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
   fileFilter: (_req, file, cb) => {
-    if (file.mimetype !== "application/pdf") {
-      cb(new Error("Only PDF files are accepted."));
-    } else {
+    if (ACCEPTED_MIME_TYPES.has(file.mimetype)) {
       cb(null, true);
+    } else {
+      cb(new Error("Only PDF and image files (JPEG, PNG, TIFF, BMP, WebP) are accepted."));
     }
   },
 });
@@ -26,18 +38,33 @@ router.post("/", upload.single("file"), async (req: Request, res: Response) => {
 
     // Accept exactly one source mode per request so downstream prompts stay consistent.
     if (req.file) {
-      // Resume upload path
-      text = await parsePdf(req.file.buffer);
+      const mime = req.file.mimetype;
+
+      if (mime === "application/pdf") {
+        // Standard PDF path: extract embedded text
+        text = await parsePdf(req.file.buffer);
+
+        // If the PDF is image-only (scanned), fall through to QVAC OCR
+        if (isImageOnlyContent(text)) {
+          console.log("[upload] Image-only PDF detected — routing to QVAC OCR");
+          text = await extractTextFromImage(req.file.buffer);
+        }
+      } else {
+        // Direct image upload — use QVAC OCR on-device
+        console.log(`[upload] Image file (${mime}) — routing to QVAC OCR`);
+        text = await extractTextFromImage(req.file.buffer);
+      }
     } else if (req.body?.githubUsername) {
       // GitHub path
       text = await fetchGithubProfile(req.body.githubUsername);
     } else {
-      res.status(400).json({ error: "Provide a PDF file or githubUsername." });
+      res.status(400).json({ error: "Provide a PDF/image file or githubUsername." });
       return;
     }
 
     const type = req.file ? "resume" : "github";
     // AI output is normalized into SkillReport before any persistence.
+    // analyzeText now uses QVAC local LLM (falls back to OpenAI if unavailable).
     const skillReport = await analyzeText(text, type);
 
     // Upload report JSON to IPFS

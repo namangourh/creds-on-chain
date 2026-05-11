@@ -259,7 +259,8 @@ export default function LandingPage() {
           {[
             { label: 'Solana Devnet', icon: '⚡' },
             { label: 'IPFS via Pinata', icon: '📌' },
-            { label: 'GPT-4o mini', icon: '🤖' },
+            { label: 'QVAC Local AI', icon: '🧠' },
+            { label: 'Multilingual', icon: '🌐' },
             { label: 'Open Source', icon: '🔓' },
           ].map((badge, i) => (
             <TrustBadge key={badge.label} {...badge} index={i} />
@@ -279,7 +280,7 @@ export default function LandingPage() {
           {
             icon: 'description',
             title: 'Upload Resume or GitHub',
-            desc: 'PDF upload or GitHub username — AI extracts your creds from both sources automatically.',
+            desc: 'PDF, scanned image, or GitHub username — QVAC AI extracts your creds locally. No data leaves the server.',
           },
           {
             icon: 'verified',
@@ -290,6 +291,21 @@ export default function LandingPage() {
             icon: 'lock_open',
             title: 'Pay-to-Unlock',
             desc: 'Recruiters pay SOL to unlock your full cred report. You earn directly to your wallet.',
+          },
+          {
+            icon: 'translate',
+            title: 'Multilingual Reports',
+            desc: 'Unlock reports are readable in 15 languages — translated on-device by QVAC. No cloud translation API.',
+          },
+          {
+            icon: 'travel_explore',
+            title: 'Semantic Search',
+            desc: 'Browse profiles by skill and expertise — not just keywords. QVAC embeddings rank results by true semantic similarity.',
+          },
+          {
+            icon: 'shield_lock',
+            title: 'Privacy-First AI',
+            desc: 'Every AI operation — analysis, OCR, search, translation — runs locally on the server. Your data never touches a cloud API.',
           },
         ].map((card, index) => (
           <motion.div
