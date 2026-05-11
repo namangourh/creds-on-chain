@@ -1,18 +1,23 @@
-# CredChain
+# CredChain — Sovereign AI Skill Passport
 
-Upload your resume or GitHub profile — AI extracts your creds, stores the report on IPFS, and anchors a tamper-proof hash on Solana. Recruiters pay SOL to unlock your full cred report; you earn directly to your wallet.
+Your professional credentials, owned by you. Verified on-chain. Understood by AI that never leaves the machine.
 
-All AI runs **locally on-device** via [QVAC](https://qvac.ai) — no cloud API, no data leakage, no subscription.
+CredChain lets anyone turn a resume, a scanned document, or a GitHub profile into a tamper-proof, pay-to-unlock credential anchored on Solana — with every AI operation running locally via [QVAC](https://qvac.ai). No cloud API. No subscription. No data leakage. The model runs on your hardware, the hash lives on-chain, and the report lives on IPFS.
+
+Recruiters pay SOL to unlock a full skill report. You keep the earnings. The system keeps nothing private — except what it never sends anywhere to begin with.
 
 ---
 
 ## How it works
 
-1. **Upload** a PDF resume, a scanned image, or enter a GitHub username
-2. **Local AI Analysis** — QVAC (`@qvac/llm-llamacpp`) extracts skills, writes a summary, and scores your profile (0–100) entirely on-device
-3. **IPFS Storage** — the skill report is pinned to IPFS via Pinata (permanent, censorship-resistant)
-4. **On-Chain Proof** — the SHA-256 hash is anchored on Solana Devnet via an Anchor smart contract
-5. **Pay-to-Unlock** — viewers pay SOL to unlock the full report; payment is verified on-chain before a JWT is issued
+1. **Upload anything** — PDF resume, scanned image (JPEG/PNG/TIFF), or a GitHub username
+2. **OCR on-device** — if the input is an image or a scanned PDF, QVAC (`@qvac/ocr-onnx`) extracts the text locally before any analysis
+3. **Local LLM analysis** — QVAC (`@qvac/llm-llamacpp`) runs Mistral-7B on the server to extract skills, write a summary, and score the profile 0–100; the raw text never reaches a cloud API
+4. **IPFS Storage** — the structured skill report is pinned to IPFS via Pinata (permanent, censorship-resistant, content-addressed)
+5. **On-Chain Proof** — a SHA-256 hash of the report is anchored on Solana Devnet via an Anchor smart contract; anyone can verify integrity without accessing the content
+6. **Pay-to-Unlock** — recruiters pay SOL directly to the profile owner; the server issues a short-lived JWT only after verifying the on-chain payment
+7. **Semantic Search** — the Browse page uses QVAC (`@qvac/embed-llamacpp`) to embed profiles into local vectors; search queries are ranked by cosine similarity, not keyword matching
+8. **Multilingual** — unlocked reports can be translated into 15 languages by QVAC (`@qvac/translation-nmtcpp`) running a local NMT model on the server
 
 ---
 
