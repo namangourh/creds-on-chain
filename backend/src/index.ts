@@ -15,6 +15,7 @@ import unlockRouter from "./routes/unlock";
 import reportRouter from "./routes/report";
 import searchRouter from "./routes/search";
 import translateRouter from "./routes/translate";
+import { seedStoreFromDB } from "./services/embeddings";
 
 const app = express();
 
@@ -54,6 +55,12 @@ app.get("/health", (_req, res) => res.json({ status: "ok" }));
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Backend running on http://localhost:${PORT}`);
+
+  // Warm up the embedding store in the background so the first search is instant.
+  // Fire-and-forget — server starts accepting requests immediately.
+  seedStoreFromDB().catch(e =>
+    console.warn("[startup] embedding seed failed:", e?.message)
+  );
 
   // Self-ping every 10 min to prevent Render free tier from sleeping the container.
   // Only runs in production so local dev isn't affected.

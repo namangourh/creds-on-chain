@@ -1,9 +1,12 @@
 import { SkillReport } from "../types";
+import { getAllProofsByWallet } from "./cidStore";
+import { fetchProofAccount } from "./solanaVerifier";
+import { fetchReport } from "./ipfsClient";
 
 // ─── In-memory vector store ───────────────────────────────────────────────────
 // Maps wallet address → { vector, skillReport, cid, price }
-// Vectors are produced by QVAC's local embedding model so no data ever leaves
-// the machine. On restart the store re-populates lazily as profiles are queried.
+// Populated at server startup and on every /api/register call.
+// Search itself is pure in-memory cosine math — no DB or IPFS calls during query.
 
 interface EmbeddedProfile {
   wallet: string;
@@ -15,44 +18,43 @@ interface EmbeddedProfile {
 
 const store = new Map<string, EmbeddedProfile>();
 
+// Cache the global vocab so it isn't rebuilt on every search
+let cachedVocab: string[] | null = null;
+let vocabDirty = true;
+
 // ─── QVAC Embeddings client ───────────────────────────────────────────────────
-// @qvac/embed-llamacpp runs fully on-device — no API key, no cloud call.
-// The model is downloaded once and cached locally by the QVAC runtime.
 let embedder: any | null = null;
+let embedderInitAttempted = false;
 
 async function getEmbedder() {
-  if (!embedder) {
-    try {
-      // Dynamic import so the rest of the backend starts normally even if
-      // the QVAC package is not yet installed (graceful degradation).
-      const { Embedder } = await import("@qvac/embed-llamacpp");
-      embedder = new Embedder({ model: "nomic-embed-text" });
-      await embedder.init();
-      console.log("[embeddings] QVAC embedder ready (local, on-device)");
-    } catch (e: any) {
-      console.warn(
-        "[embeddings] QVAC embed package unavailable — falling back to TF-IDF cosine.",
-        e?.message
-      );
-      embedder = null;
-    }
+  if (embedderInitAttempted) return embedder;
+  embedderInitAttempted = true;
+  try {
+    const { Embedder } = await import("@qvac/embed-llamacpp");
+    embedder = new Embedder({ model: "nomic-embed-text" });
+    await embedder.init();
+    console.log("[embeddings] QVAC embedder ready (local, on-device)");
+  } catch (e: any) {
+    console.warn(
+      "[embeddings] QVAC embed package unavailable — falling back to TF-IDF cosine.",
+      e?.message
+    );
+    embedder = null;
   }
   return embedder;
 }
 
-// ─── Fallback: lightweight TF-IDF bag-of-words vector ────────────────────────
-// Used when the QVAC package hasn't been installed yet, so the search feature
-// degrades gracefully to keyword cosine similarity rather than crashing.
-
-function tfidfVector(text: string, vocab: string[]): number[] {
-  const words = text.toLowerCase().split(/\W+/);
-  return vocab.map(term => words.filter(w => w === term).length);
-}
+// ─── TF-IDF fallback ──────────────────────────────────────────────────────────
 
 function buildVocab(texts: string[]): string[] {
   const set = new Set<string>();
   for (const t of texts) t.toLowerCase().split(/\W+/).forEach(w => w && set.add(w));
   return [...set];
+}
+
+function tfidfVector(text: string, vocab: string[]): number[] {
+  const words = text.toLowerCase().split(/\W+/);
+  return vocab.map(term => words.filter(w => w === term).length);
 }
 
 function dotProduct(a: number[], b: number[]): number {
@@ -68,35 +70,30 @@ export function cosineSimilarity(a: number[], b: number[]): number {
   return mag === 0 ? 0 : dotProduct(a, b) / mag;
 }
 
-// ─── Public API ───────────────────────────────────────────────────────────────
-
 /** Converts a SkillReport to a single text corpus for embedding. */
 function reportToText(report: SkillReport): string {
   return `${report.skills.join(" ")} ${report.summary}`;
 }
 
-/**
- * Embed a single text string into a vector.
- * Uses QVAC local model when available, falls back to keyword vector.
- */
-async function embed(text: string, fallbackVocab?: string[]): Promise<number[]> {
-  const e = await getEmbedder();
-  if (e) {
-    return e.embed(text) as Promise<number[]>;
-  }
-  // Fallback: vocab built from all stored profiles for consistent dimensions
-  const vocab = fallbackVocab ?? buildVocabFromStore();
-  return tfidfVector(text, vocab);
+function getVocab(): string[] {
+  if (!vocabDirty && cachedVocab) return cachedVocab;
+  const allTexts = [...store.values()].map(p => reportToText(p.skillReport));
+  cachedVocab = buildVocab(allTexts);
+  vocabDirty = false;
+  return cachedVocab;
 }
 
-function buildVocabFromStore(): string[] {
-  const allTexts = [...store.values()].map(p => reportToText(p.skillReport));
-  return buildVocab(allTexts);
+async function embed(text: string): Promise<number[]> {
+  const e = await getEmbedder();
+  if (e) return e.embed(text) as Promise<number[]>;
+  return tfidfVector(text, getVocab());
 }
+
+// ─── Public API ───────────────────────────────────────────────────────────────
 
 /**
  * Store (or update) a profile's embedding in the in-memory vector store.
- * Called from the upload/register pipeline so new profiles are immediately searchable.
+ * Called from the upload/register pipeline and at server startup.
  */
 export async function indexProfile(
   wallet: string,
@@ -104,16 +101,16 @@ export async function indexProfile(
   price: number | null,
   skillReport: SkillReport
 ): Promise<void> {
-  const text = reportToText(skillReport);
-  const vocab = buildVocabFromStore();
-  const vector = await embed(text, vocab);
+  // Mark vocab dirty so it gets rebuilt to include the new profile
+  vocabDirty = true;
+  const vector = await embed(reportToText(skillReport));
   store.set(wallet, { wallet, cid, price, skillReport, vector });
   console.log(`[embeddings] Indexed profile for ${wallet.slice(0, 8)}…`);
 }
 
 /**
- * Semantic search: returns profiles ranked by cosine similarity to the query.
- * All inference is local — the query text never leaves the machine.
+ * Semantic search: returns profiles ranked by cosine similarity.
+ * Pure in-memory — no DB or IPFS calls. Fast even on free-tier hardware.
  */
 export async function searchProfiles(
   query: string,
@@ -121,19 +118,16 @@ export async function searchProfiles(
 ): Promise<Array<{ wallet: string; cid: string; price: number | null; skillReport: SkillReport; score: number }>> {
   if (store.size === 0) return [];
 
-  const vocab = buildVocabFromStore();
-  const queryVec = await embed(query, vocab);
-
-  // Re-embed all stored profiles with the same (possibly updated) vocab when
-  // using the TF-IDF fallback, since vocab grows as profiles are added.
+  const queryVec = await embed(query);
   const e = await getEmbedder();
-  const results = await Promise.all(
-    [...store.values()].map(async (p) => {
-      const vec = e ? p.vector : tfidfVector(reportToText(p.skillReport), vocab);
-      const score = cosineSimilarity(queryVec, vec);
-      return { ...p, score };
-    })
-  );
+
+  // When using TF-IDF, re-embed stored profiles with the current vocab
+  // (only after new profiles were added; otherwise use cached vectors)
+  const results = [...store.values()].map(p => {
+    const vec = e ? p.vector : tfidfVector(reportToText(p.skillReport), getVocab());
+    const score = cosineSimilarity(queryVec, vec);
+    return { wallet: p.wallet, cid: p.cid, price: p.price, skillReport: p.skillReport, score };
+  });
 
   return results
     .sort((a, b) => b.score - a.score)
@@ -141,7 +135,7 @@ export async function searchProfiles(
     .filter(r => r.score > 0);
 }
 
-/** Bulk-seed the store from profiles already fetched by the browse route. */
+/** Bulk-seed from already-fetched profiles (called from register route). */
 export async function seedFromProfiles(
   profiles: Array<{ wallet: string; cid: string; price: number | null; skillReport: SkillReport }>
 ): Promise<void> {
@@ -150,4 +144,50 @@ export async function seedFromProfiles(
       await indexProfile(p.wallet, p.cid, p.price, p.skillReport);
     }
   }
+}
+
+/**
+ * Seed the store from the database at server startup.
+ * Runs once in the background — server accepts requests immediately.
+ * Subsequent searches hit the warm in-memory store with no latency.
+ */
+export async function seedStoreFromDB(): Promise<void> {
+  const programId = process.env.PROGRAM_ID!;
+  console.log("[embeddings] Seeding embedding store from DB…");
+
+  const rows = await getAllProofsByWallet();
+  const byWallet = new Map<string, { cid: string; nonce: number }[]>();
+  for (const row of rows) {
+    if (!byWallet.has(row.wallet)) byWallet.set(row.wallet, []);
+    byWallet.get(row.wallet)!.push({ cid: row.cid, nonce: row.nonce });
+  }
+
+  const wallets = [...byWallet.keys()].slice(0, 100);
+  let indexed = 0;
+
+  // Process in small batches so we don't hammer IPFS/Solana all at once
+  const BATCH = 5;
+  for (let i = 0; i < wallets.length; i += BATCH) {
+    const batch = wallets.slice(i, i + BATCH);
+    await Promise.allSettled(
+      batch.map(async wallet => {
+        if (store.has(wallet)) return; // already indexed (e.g. from /register)
+        const entries = byWallet.get(wallet)!;
+        for (const { cid, nonce } of entries) {
+          try {
+            const onChain = await fetchProofAccount(wallet, programId, nonce);
+            const skillReport = await fetchReport(cid);
+            const price = onChain ? Number(onChain.price) : null;
+            await indexProfile(wallet, cid, price, skillReport);
+            indexed++;
+            return;
+          } catch {
+            continue;
+          }
+        }
+      })
+    );
+  }
+
+  console.log(`[embeddings] Startup seed complete — ${indexed} profiles indexed.`);
 }
