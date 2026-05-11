@@ -75,3 +75,9 @@ export async function getBrowseProfiles(): Promise<BrowseProfile[]> {
   const { data } = await api.get('/api/profiles');
   return data;
 }
+
+export async function searchProfiles(query: string): Promise<Array<BrowseProfile & { score: number }>> {
+  const { data } = await api.get('/api/search', { params: { q: query, limit: 20 } });
+  return data;
+}
+
