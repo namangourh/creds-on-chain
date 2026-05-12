@@ -29,6 +29,7 @@ yarn-error.log*
 # ── Markdown (internal docs, keep off public repo) ───────────────────────────
 *.md
 !/README.md
+!/docs/*.md
 
 # ── Claude Code local config ─────────────────────────────────────────────────
 .claude/
