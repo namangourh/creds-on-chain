@@ -38,3 +38,31 @@ declare module "@qvac/translation-nmtcpp" {
     [key: string]: any;
   }
 }
+
+declare module "@qvac/transcription-whispercpp" {
+  export class TranscriptionWhispercpp {
+    constructor(args: { modelName: string; loader: any; diskPath: string }, config?: any);
+    load(closeLoader?: boolean, onProgress?: (p: any) => void): Promise<void>;
+    run(audioStream: any): Promise<{ onUpdate: (cb: (data: any) => void) => { await: () => Promise<void> }; iterate: () => AsyncIterable<any> }>;
+    unload(): Promise<void>;
+    [key: string]: any;
+  }
+}
+
+declare module "@qvac/tts-onnx" {
+  export default class ONNXTTS {
+    constructor(args: { [key: string]: any }, config?: { language?: string; useGPU?: boolean });
+    load(closeLoader?: boolean, onProgress?: (p: any) => void): Promise<void>;
+    run(params: { input: string; type: 'text' }): Promise<{ onUpdate: (cb: (data: any) => void) => { await: () => Promise<void> }; stats?: any }>;
+    unload(): Promise<void>;
+    [key: string]: any;
+  }
+}
+
+declare module "@qvac/dl-filesystem" {
+  export default class FilesystemDL {
+    constructor(options: { dirPath: string });
+    close(): Promise<void>;
+    [key: string]: any;
+  }
+}

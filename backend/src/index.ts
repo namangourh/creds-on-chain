@@ -15,6 +15,7 @@ import unlockRouter from "./routes/unlock";
 import reportRouter from "./routes/report";
 import searchRouter from "./routes/search";
 import translateRouter from "./routes/translate";
+import speechRouter from "./routes/speech";
 import { seedStoreFromDB } from "./services/embeddings";
 
 const app = express();
@@ -48,6 +49,7 @@ app.use("/api/unlock", apiLimiter, unlockRouter);
 app.use("/api/report", apiLimiter, reportRouter);
 app.use("/api/search", apiLimiter, searchRouter);
 app.use("/api/translate", apiLimiter, translateRouter);
+app.use("/api/speech", apiLimiter, speechRouter);
 
 // Health check
 app.get("/health", (_req, res) => res.json({ status: "ok" }));

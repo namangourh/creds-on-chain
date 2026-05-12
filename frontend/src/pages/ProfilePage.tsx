@@ -14,6 +14,7 @@ import ExplorerLink from '../components/ExplorerLink';
 import ShareButton from '../components/ShareButton';
 import { useTheme } from '../lib/theme';
 import type { SkillReport } from '../types';
+import { speakText, stopSpeaking, isTtsSupportedInBrowser } from '../lib/speech';
 
 interface Profile {
   hash: string;
@@ -226,6 +227,11 @@ export default function ProfilePage() {
   const [translatedSummary, setTranslatedSummary] = useState<string | null>(null);
   const [translating, setTranslating] = useState(false);
 
+  // TTS state
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [ttsMode, setTtsMode] = useState<'qvac' | 'browser' | null>(null);
+  const ttsSupportedInBrowser = isTtsSupportedInBrowser();
+
   const primaryColor = isDark ? '#14f070' : '#0d4aa5';
   const isOwner = publicKey?.toBase58().toLowerCase() === walletAddress?.toLowerCase();
 
@@ -239,6 +245,12 @@ export default function ProfilePage() {
   }, []);
 
   const handleLangChange = async (lang: string) => {
+    // Stop any active TTS when switching language
+    if (isSpeaking) {
+      stopSpeaking();
+      setIsSpeaking(false);
+      setTtsMode(null);
+    }
     setSelectedLang(lang);
     if (lang === 'en') { setTranslatedSummary(null); return; }
     const summary = (unlocked ? fullReport?.summary : profile?.skillReport.summary) ?? '';
@@ -249,6 +261,28 @@ export default function ProfilePage() {
       setTranslatedSummary(translated);
     } catch { setTranslatedSummary(null); }
     finally { setTranslating(false); }
+  };
+
+  const handleReadReport = async () => {
+    if (isSpeaking) {
+      stopSpeaking();
+      setIsSpeaking(false);
+      setTtsMode(null);
+      return;
+    }
+    const text = (unlocked ? fullReport?.summary : profile?.skillReport.summary) ?? '';
+    if (!text) return;
+    setIsSpeaking(true);
+    try {
+      const mode = await speakText(text, () => {
+        setIsSpeaking(false);
+        setTtsMode(null);
+      });
+      setTtsMode(mode);
+    } catch {
+      setIsSpeaking(false);
+      setTtsMode(null);
+    }
   };
 
   useEffect(() => {
@@ -668,6 +702,79 @@ export default function ProfilePage() {
                           {qvacTranslateAvailable ? 'QVAC local' : 'AI translated'}
                         </span>
                       ) : null}
+
+                      {/* ── Read Report (TTS) — English only ── */}
+                      {selectedLang === 'en' && ttsSupportedInBrowser && (
+                        <motion.button
+                          id="read-report-btn"
+                          type="button"
+                          onClick={handleReadReport}
+                          title={isSpeaking ? 'Stop reading' : 'Read report aloud'}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.35rem',
+                            padding: '0.35rem 0.75rem',
+                            borderRadius: '0.625rem',
+                            border: `1px solid ${isSpeaking ? '#ef4444' : primaryColor}66`,
+                            background: isSpeaking
+                              ? 'rgba(239,68,68,0.1)'
+                              : isDark ? 'rgba(20,241,112,0.07)' : 'rgba(13,74,165,0.07)',
+                            color: isSpeaking ? '#ef4444' : primaryColor,
+                            fontSize: '0.8125rem',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            flexShrink: 0,
+                            transition: 'all 0.2s',
+                          }}
+                        >
+                          {isSpeaking ? (
+                            <>
+                              {/* Animated waveform bars */}
+                              <span style={{ display: 'flex', alignItems: 'flex-end', gap: '2px', height: '14px' }}>
+                                {[3, 5, 4, 6, 3].map((h, i) => (
+                                  <motion.span
+                                    key={i}
+                                    style={{
+                                      display: 'block',
+                                      width: '3px',
+                                      borderRadius: '2px',
+                                      background: '#ef4444',
+                                    }}
+                                    animate={{ height: [`${h}px`, `${h + 5}px`, `${h}px`] }}
+                                    transition={{
+                                      duration: 0.6,
+                                      repeat: Infinity,
+                                      delay: i * 0.1,
+                                      ease: 'easeInOut',
+                                    }}
+                                  />
+                                ))}
+                              </span>
+                              Stop
+                            </>
+                          ) : (
+                            <>
+                              <span className="material-symbols-outlined" style={{ fontSize: '15px', fontVariationSettings: '"FILL" 1' }}>
+                                volume_up
+                              </span>
+                              Read
+                              {ttsMode && (
+                                <span style={{
+                                  fontSize: '0.625rem',
+                                  opacity: 0.75,
+                                  fontWeight: 500,
+                                  marginLeft: '0.1rem',
+                                }}>
+                                  {ttsMode === 'qvac' ? '· QVAC' : '· AI'}
+                                </span>
+                              )}
+                            </>
+                          )}
+                        </motion.button>
+                      )}
                     </div>
 
                     {/* Summary */}
