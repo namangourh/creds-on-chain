@@ -171,3 +171,12 @@ CREATE INDEX IF NOT EXISTS idx_proofs_wallet ON proofs (wallet);
 Backend → [Render](https://render.com) · Frontend → [Vercel](https://vercel.com)
 
 Set all environment variables in your hosting dashboards before deploying. The production frontend build will fail with a clear error if `VITE_BACKEND_URL` is not configured.
+
+---
+
+## Documentation
+
+| Document | Description |
+|---|---|
+| [Quick Start Guide](./docs/quickstart.md) | Step-by-step local setup, Phantom config, registration walkthrough, and troubleshooting |
+| [Architecture & C4 Diagrams](./docs/architecture.md) | Full C4 diagrams (Context → Container → Component → Code) rendered as Mermaid |
